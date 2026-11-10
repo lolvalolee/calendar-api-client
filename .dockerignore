@@ -1,0 +1,20 @@
+# Virtual environment and Python caches are not needed in the image.
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Build artefacts.
+build/
+dist/
+
+# IDE and OS noise.
+.idea/
+.vscode/
+.git/
+.gitignore
+.DS_Store
+
+# Docker files and docs that are not needed to build the package.
+Dockerfile
+.dockerignore
