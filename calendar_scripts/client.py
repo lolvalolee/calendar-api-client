@@ -14,6 +14,10 @@ _TIMEOUT_MESSAGE = "Server is not responding. Check your connection."
 _CONNECTION_MESSAGE = "Could not connect to the server."
 _GENERIC_MESSAGE = "Request failed."
 
+# Header carrying the library version, so the backend can tell which client
+# sent the request (support, debugging, compatibility checks).
+VERSION_HEADER = "X-Client-Version"
+
 
 class ApiClient:
     """Thin wrapper over :class:`requests.Session`.
@@ -51,13 +55,19 @@ class ApiClient:
         self.session = requests.Session()
 
     def _headers(self) -> dict[str, str]:
-        """Build request headers with ``Authorization: Bearer <jwt>``.
+        """Build request headers with ``Authorization`` and the client version.
 
         The token is read from ``os.environ["jwt_token"]`` on every request
         (falling back to ``self.access_token``), so the env var always wins
         when it is set.
+
+        Every request also carries ``X-Client-Version: <library version>`` so
+        the backend knows which library build it is talking to.
         """
-        headers = {"Accept": "application/json"}
+        headers = {
+            "Accept": "application/json",
+            VERSION_HEADER: _library_version(),
+        }
         token = os.environ.get("jwt_token") or self.access_token
         if token:
             headers["Authorization"] = f"Bearer {token}"
@@ -117,6 +127,17 @@ class ApiClient:
 
     def delete(self, path: str, **kwargs: Any) -> Any:
         return self.request("DELETE", path, **kwargs)
+
+
+def _library_version() -> str:
+    """Return the package version, read at call time.
+
+    Imported inside the function on purpose: ``calendar_scripts.__init__``
+    imports this module, so a module-level import would be circular.
+    """
+    from calendar_scripts import __version__
+
+    return __version__
 
 
 def _error_message(response: requests.Response) -> str:

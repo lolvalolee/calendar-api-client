@@ -352,7 +352,37 @@ read-only fields (for example `Habit.count_today`) are never sent.
 ### Scripts
 
 A script is a module with `handle()`; parameters come from
-`get_handler_extra_data()`. See `AGENTS.md` §7.
+`get_handler_extra_data()`. See `AGENTS.md` §6.
+
+### Request headers (`X-Client-Version`)
+
+Every request the library sends carries the library version:
+
+```
+X-Client-Version: 0.0.1
+```
+
+The value is `calendar_scripts.__version__` at call time, so it always matches
+the installed package. The header is set in `ApiClient._headers()` together
+with `Authorization`; nothing has to be passed by a script.
+
+---
+
+## 5.1 Explicit client
+
+`CalendarClient` and `ApiClient` are public but a script never needs them: the
+shared client is created lazily from `base_url` and `jwt_token`. Use them only
+in a host that manages several accounts or an explicit token:
+
+```python
+from calendar_scripts import CalendarClient
+
+client = CalendarClient("http://127.0.0.1:8000")
+client.auth.sign_in("user@example.com", "secret")
+```
+
+Requests made through an explicit client carry the same `X-Client-Version`
+header.
 
 ---
 
